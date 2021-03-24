@@ -1,5 +1,5 @@
 # pythonProject
-Deep Learning Model and Compiler
+Provide deep learning model and compiler for JaveEE project
 ## File Description
 ### data_review.py: 
 explore the dataset 
