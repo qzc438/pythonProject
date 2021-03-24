@@ -1,7 +1,7 @@
 # pythonProject
 Provide deep learning model and compiler for JaveEE project
 ## File Description
-### data_review.py: 
+### data-review.py: 
 explore the dataset 
 ### flask-webservice.py: 
 webservice, flask server, input: dataset & model name, output: performance (accuracy, precision, recall, f1score)
