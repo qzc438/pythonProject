@@ -4,7 +4,9 @@ Deep Learning Model and Compiler
 ### data_review.py: 
 explore the dataset 
 ### flask-webservice.py: 
-webservice, input: dataset & model name, output: performance (accuracy, precision, recall, f1score)
+webservice, flask server
+input: dataset & model name
+output: performance (accuracy, precision, recall, f1score)
 ### main-k-fold.py: 
 10 fold cross validataion with the dataset
 ### main-onnx.py:
