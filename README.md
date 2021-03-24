@@ -10,6 +10,6 @@ k fold cross-validation with the dataset
 ### main-onnx.py:
 translate .h5 file to .onnx file
 ### main-original.py:
-orginal file from PerCom submission
+original file from PerCom submission
 ### main-split.py:
-mannually separete train and test dataset
+manually separete train and test dataset
