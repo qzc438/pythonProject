@@ -4,10 +4,6 @@ import onnxmltools as onnxmltools
 import datetime
 import pandas as pd
 from pandas import read_csv
-from torchkeras import summary
-from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Conv1D, Dropout, MaxPooling1D, Flatten, Dense
-from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.utils.np_utils import to_categorical
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
 
@@ -94,98 +90,27 @@ class CNN(nn.Module):
             x = layer(x)
         return x
 
+
 def accuracy(y_pred, y_true):
     y_pred_cls = torch.argmax(nn.Softmax(dim=1)(y_pred), dim=1).data
     return accuracy_score(y_true, y_pred_cls)
 
 
-def train_step(model, features):
-    # 训练模式，dropout层发生作用
-    model.train()
-
-    # 梯度清零
-    model.optimizer.zero_grad()
-
-    # 正向传播求损失
-    predictions = model(features.float())
-    loss = model.loss_func(predictions)
-    metric = model.metric_func(predictions)
-
-    # 反向传播求梯度
-    loss.backward()
-    model.optimizer.step()
-
-    return loss.item(), metric.item()
-
-
-@torch.no_grad()
-def valid_step(model, features):
-    # 预测模式，dropout层不发生作用
-    model.eval()
-
-    predictions = model(features)
-    loss = model.loss_func(predictions)
-    metric = model.metric_func(predictions)
-
-    return loss.item(), metric.item()
-
-
-def train_model(model, epochs, dl_train, dl_valid, log_step_freq):
-    metric_name = model.metric_name
-    dfhistory = pd.DataFrame(columns=["epoch", "loss", metric_name, "val_loss", "val_" + metric_name])
-    print("Start Training...")
-    nowtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    print("==========" * 8 + "%s" % nowtime)
-
-    for epoch in range(1, epochs + 1):
-
-        # 1，训练循环-------------------------------------------------
-        loss_sum = 0.0
-        metric_sum = 0.0
-        step = 1
-
-        for step, features in enumerate(dl_train, 1):
-
-            loss, metric = train_step(model, features)
-
-            # 打印batch级别日志
-            loss_sum += loss
-            metric_sum += metric
-            if step % log_step_freq == 0:
-                print(("[step = %d] loss: %.3f, " + metric_name + ": %.3f") %
-                      (step, loss_sum / step, metric_sum / step))
-
-        # 2，验证循环-------------------------------------------------
-        val_loss_sum = 0.0
-        val_metric_sum = 0.0
-        val_step = 1
-
-        for val_step, features in enumerate(dl_valid, 1):
-            val_loss, val_metric = valid_step(model, features)
-
-            val_loss_sum += val_loss
-            val_metric_sum += val_metric
-
-        # 3，记录日志-------------------------------------------------
-        info = (epoch, loss_sum / step, metric_sum / step,
-                val_loss_sum / val_step, val_metric_sum / val_step)
-        dfhistory.loc[epoch - 1] = info
-
-        # 打印epoch级别日志
-        print(("\nEPOCH = %d, loss = %.3f," + metric_name + \
-               "  = %.3f, val_loss = %.3f, " + "val_" + metric_name + " = %.3f")
-              % info)
-        nowtime = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        print("\n" + "==========" * 8 + "%s" % nowtime)
-
-    print('Finished Training...')
-    return dfhistory
-
-
 if __name__ == '__main__':
     trainX, trainy, testX, testy = load_dataset()
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
+
+    in_dim = 1152
+    hidden_dim = 128
+    out_dim = 6
+
     model = CNN(n_timesteps, n_features, n_outputs)
+    # model = nn.Sequential(
+    #     nn.Linear(in_dim, hidden_dim),
+    #     nn.ReLU(),
+    #     nn.Linear(hidden_dim, out_dim),
+    #     nn.Softmax(dim = 1)
+    #     )
     summary(model, input_shape=(9, 128))
     trainX = np.transpose(trainX, (0, 2, 1))
     trainX = torch.utils.data.DataLoader(trainX, batch_size=32, shuffle=True, num_workers=0)
@@ -201,7 +126,6 @@ if __name__ == '__main__':
     def accuracy(y_pred, y_true):
         y_pred_cls = torch.argmax(nn.Softmax(dim=1)(y_pred), dim=1).data
         return accuracy_score(y_true, y_pred_cls)
-
 
     loss_func = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=0.01)
@@ -224,25 +148,37 @@ if __name__ == '__main__':
         metric_sum = 0.0
         step = 1
 
+        # stop_index = len(trainy)//32
+        # start_index = 0
         for features, labels in zip(trainX, trainy):
-            print('step', step)
-            print('features', features)
-            print('labels', labels)
+            # start_index += 1
+            # if start_index >= stop_index -1:
+            #     break
+            # print('step', step)
+            print('features shape', features.shape)
+            # print('features0', features[0][0])
+            # print('features1', features[1][0])
+
+            # features = torch.reshape(features,(32, -1))
+            # print('labels', labels)
 
             # 梯度清零
             optimizer.zero_grad()
-
+            # print(features[0])
+            # print(features[1])
+            # predictions0 = model(features[0].unsqueeze(0).float())
+            # predictions1 = model(features[1].unsqueeze(0).float())
+            # print(f'predictions0 is {predictions0}')
+            # print(f'prediction1 is {predictions1}')
+            # import pdb; pdb.set_trace()
             # 正向传播求损失
+            # predictions = model(features[:32].float())
+            # predictions = model(features.reshape(32, -1).float())
             predictions = model(features.float())
-            # predictions = torch.from_numpy(predictions).float()
-
-
-            # labels = torch.from_numpy(labels)
-
-
-            # predictions = torch.argmax(predictions, dim=1)
-            # print('predictions', predictions)
             # print('predictions shape:', predictions.shape)
+            # print('predictions', predictions)
+            # predictions = torch.argmax(predictions,dim=1)
+            print(predictions)
             labels = torch.argmax(labels, dim=1)
             # print('labels', labels)
             # print('labels shape:', labels.shape)
@@ -266,15 +202,22 @@ if __name__ == '__main__':
         val_metric_sum = 0.0
         val_step = 1
 
-        for features, labels in zip(trainX, trainy):
+        # stop_index = len(testy)//32
+        # start_index = 0
+        for features, labels in zip(testX, testy):
+            # start_index += 1
+            # if start_index > stop_index:
+            #     break
             with torch.no_grad():
                 predictions = model(features.float())
+                # predictions = torch.argmax(predictions, dim=1)
                 labels = torch.argmax(labels, dim=1)
                 val_loss = loss_func(predictions, labels)
                 val_metric = metric_func(predictions, labels)
 
             val_loss_sum += val_loss.item()
             val_metric_sum += val_metric.item()
+            val_step = val_step + 1
 
         # 3，记录日志-------------------------------------------------
         info = (epoch, loss_sum / step, metric_sum / step,
@@ -289,85 +232,3 @@ if __name__ == '__main__':
         print("\n" + "==========" * 8 + "%s" % nowtime)
 
     print('Finished Training...')
-
-
-# fit and evaluate a model
-def evaluate_model(trainX, trainy, testX, testy):
-    verbose, epochs, batch_size = 0, 10, 32
-    n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
-    model = Sequential()
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(n_timesteps, n_features)))
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Flatten())
-    model.add(Dense(100, activation='relu'))
-    model.add(Dense(n_outputs, activation='softmax'))
-    plot_model(model, show_shapes=True, to_file='CNN.png', dpi=200)
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    # fit network
-    model.fit(trainX, trainy, epochs=epochs, batch_size=batch_size, verbose=verbose)
-    # evaluate model
-    # _, accuracy = model.evaluate(testX, testy, batch_size=batch_size, verbose=0)
-    # return accuracy
-    # save model
-    model.save('./models/model_test.h5')
-    keras_model = load_model('./models/model_test.h5')
-    onnx_model = onnxmltools.convert_keras(keras_model)
-    onnxmltools.utils.save_model(onnx_model, './models/model_test.onnx')
-    # load model
-    model = load_model('./models/model_test.h5')
-
-    y_predict = model.predict(testX, batch_size=batch_size, verbose=verbose)
-    print('y_predict:', y_predict)
-    y_predict = np.argmax(y_predict, axis=1)
-    testy = np.argmax(testy, axis=1)
-    y_true = np.reshape(testy, [-1])
-    y_pred = np.reshape(y_predict, [-1])
-
-    # evaluation
-    accuracy = accuracy_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred, average='macro')
-    recall = recall_score(y_true, y_pred, average='macro')
-    f1score = f1_score(y_true, y_pred, average='macro')
-    return [accuracy, precision, recall, f1score]
-
-
-# summarize scores
-def summarize_results(scores):
-    print(scores)
-    mean, std = np.mean(scores), np.std(scores)
-    return [mean, std]
-
-
-# run an experiment
-def run_experiment(repeats=10):
-    # load data
-    trainX, trainy, testX, testy = load_dataset()
-    # repeat experiment
-    accuracylist = list()
-    precisionlist = list()
-    recalllist = list()
-    f1scorelist = list()
-    for n in range(repeats):
-        accuracy, precision, recall, f1score = evaluate_model(trainX, trainy, testX, testy)
-        print('>#%d Accuracy: %.2f%%' % (n + 1, accuracy * 100))
-        accuracylist.append(accuracy)
-        print('>#%d Precision: %.2f%%' % (n + 1, precision * 100))
-        precisionlist.append(precision)
-        print('>#%d Recall: %.2f%%' % (n + 1, recall * 100))
-        recalllist.append(recall)
-        print('>#%d F1 Score: %.2f%%' % (n + 1, f1score * 100))
-        f1scorelist.append(f1score)
-    # summarize results
-    mean, std = summarize_results(accuracylist)
-    print('Accuracy: %.2f%% (+/-%.2f)' % (mean * 100, std))
-    mean, std = summarize_results(precisionlist)
-    print('Precision: %.2f%% (+/-%.2f)' % (mean * 100, std))
-    mean, std = summarize_results(recalllist)
-    print('Recall: %.2f%% (+/-%.2f)' % (mean * 100, std))
-    mean, std = summarize_results(f1scorelist)
-    print('F1 Score: %.2f%% (+/-%.2f)' % (mean * 100, std))
-
-
-# run_experiment()
