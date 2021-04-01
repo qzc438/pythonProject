@@ -79,6 +79,7 @@ def run_experiment(repeats=10):
         print(i.name)
         print(i.shape)
     y_predict = sess.run(None, {sess.get_inputs()[0].name: testX.astype(np.float32)})
+    print('y_predict', y_predict)
     y_predict = np.array(y_predict)
     y_predict = np.argmax(y_predict, axis=2)
     testy = np.argmax(testy, axis=1)

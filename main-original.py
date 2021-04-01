@@ -11,6 +11,9 @@ from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_sc
 
 
 # load a single file as a numpy array
+from tensorflow.python.keras.utils.vis_utils import plot_model
+
+
 def load_file(filepath):
     dataframe = read_csv(filepath, header=None, delim_whitespace=True)
     return dataframe.values
@@ -49,11 +52,11 @@ def load_dataset_group(group, prefix=''):
 def load_dataset(prefix=''):
     # load all train
     trainX, trainy = load_dataset_group('train', prefix + 'UCI HAR Dataset/')
-    print(trainX.shape, trainy.shape)
+    # print(trainX.shape, trainy.shape)
     # load all test
     testX, testy = load_dataset_group('test', prefix + 'UCI HAR Dataset/')
-    print(testX.shape, testy.shape)
-    # zero-offset class values
+    # print(testX.shape, testy.shape)
+    # zero-offset class values， begin with 0, not 1
     trainy = trainy - 1
     testy = testy - 1
     # one hot encode y
@@ -75,6 +78,7 @@ def evaluate_model(trainX, trainy, testX, testy):
     model.add(Flatten())
     model.add(Dense(100, activation='relu'))
     model.add(Dense(n_outputs, activation='softmax'))
+    plot_model(model, show_shapes=True, to_file='CNN.png', dpi=200)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     # fit network
     model.fit(trainX, trainy, epochs=epochs, batch_size=batch_size, verbose=verbose)
@@ -115,6 +119,7 @@ def summarize_results(scores):
 def run_experiment(repeats=10):
     # load data
     trainX, trainy, testX, testy = load_dataset()
+    print('trainX', trainX)
     # repeat experiment
     accuracylist = list()
     precisionlist = list()
