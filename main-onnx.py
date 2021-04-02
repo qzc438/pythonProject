@@ -1,6 +1,7 @@
 # all the data from train data set, k-fold validation
 import numpy as np
 import onnxruntime
+import torch
 
 from pandas import read_csv
 from tensorflow.python.keras.utils.np_utils import to_categorical
@@ -71,25 +72,32 @@ def summarize_results(scores):
 def run_experiment(repeats=10):
     # load data
     trainX, trainy, testX, testy = load_dataset()
-    sess = onnxruntime.InferenceSession('./models/model1.onnx')
+    # sess = onnxruntime.InferenceSession('./models/model1.onnx')
+    sess = onnxruntime.InferenceSession('./cnn-pytorch.onnx')
     for i in sess.get_inputs():
         print(i.name)
         print(i.shape)
     for i in sess.get_outputs():
         print(i.name)
         print(i.shape)
-    y_predict = sess.run(None, {sess.get_inputs()[0].name: testX.astype(np.float32)})
-    print('y_predict', y_predict)
-    y_predict = np.array(y_predict)
-    y_predict = np.argmax(y_predict, axis=2)
-    testy = np.argmax(testy, axis=1)
-    y_true = np.reshape(testy, [-1])
-    y_pred = np.reshape(y_predict, [-1])
-    accuracy = accuracy_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred, average='macro')
-    recall = recall_score(y_true, y_pred, average='macro')
-    f1score = f1_score(y_true, y_pred, average='macro')
-    print(accuracy, precision, recall, f1score)
+    # y_predict = sess.run(None, {sess.get_inputs()[0].name: testX.astype(np.float32)})
+    testX = np.transpose(testX, (0, 2, 1))
+    testX = torch.utils.data.DataLoader(testX, batch_size=32, shuffle=True, num_workers=0)
+    testy = torch.utils.data.DataLoader(testy, batch_size=32, shuffle=True, num_workers=0)
+    for features, labels in zip(testX, testy):
+        y_predict = sess.run(None, {sess.get_inputs()[0].name: features.float().numpy()})
+        print('y_predict', y_predict)
+        # y_predict = np.array(y_predict)
+        # y_predict = np.argmax(y_predict, axis=2)
+        # testy = labels
+        # y_true = np.reshape(testy, [-1])
+        # y_pred = np.reshape(y_predict, [-1])
+        # accuracy = accuracy_score(y_true, y_pred)
+        # precision = precision_score(y_true, y_pred, average='macro')
+        # recall = recall_score(y_true, y_pred, average='macro')
+        # f1score = f1_score(y_true, y_pred, average='macro')
+        # print(accuracy, precision, recall, f1score)
+
 
 
 run_experiment()

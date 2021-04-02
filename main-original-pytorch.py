@@ -14,6 +14,7 @@ import torch.nn as nn
 # load a single file as a numpy array
 from tensorflow.python.keras.utils.vis_utils import plot_model
 from torch.autograd import Variable
+from torchkeras import summary
 
 
 def load_file(filepath):
@@ -99,12 +100,10 @@ def accuracy(y_pred, y_true):
 if __name__ == '__main__':
     trainX, trainy, testX, testy = load_dataset()
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
-
-    in_dim = 1152
-    hidden_dim = 128
-    out_dim = 6
-
     model = CNN(n_timesteps, n_features, n_outputs)
+    # in_dim = 1152
+    # hidden_dim = 128
+    # out_dim = 6
     # model = nn.Sequential(
     #     nn.Linear(in_dim, hidden_dim),
     #     nn.ReLU(),
@@ -112,7 +111,9 @@ if __name__ == '__main__':
     #     nn.Softmax(dim = 1)
     #     )
     summary(model, input_shape=(9, 128))
+    print('trainX shape', trainX.shape)
     trainX = np.transpose(trainX, (0, 2, 1))
+    print('trainX shape', trainX.shape)
     trainX = torch.utils.data.DataLoader(trainX, batch_size=32, shuffle=True, num_workers=0)
     trainy = torch.utils.data.DataLoader(trainy, batch_size=32, shuffle=True, num_workers=0)
     testX = np.transpose(testX, (0, 2, 1))
@@ -162,8 +163,6 @@ if __name__ == '__main__':
             # features = torch.reshape(features,(32, -1))
             # print('labels', labels)
 
-            # 梯度清零
-            optimizer.zero_grad()
             # print(features[0])
             # print(features[1])
             # predictions0 = model(features[0].unsqueeze(0).float())
@@ -178,13 +177,16 @@ if __name__ == '__main__':
             # print('predictions shape:', predictions.shape)
             # print('predictions', predictions)
             # predictions = torch.argmax(predictions,dim=1)
-            print(predictions)
+            # _, predictions = torch.max(predictions.data,dim=1)
+            print('predictions', predictions)
             labels = torch.argmax(labels, dim=1)
-            # print('labels', labels)
+            print('labels', labels)
             # print('labels shape:', labels.shape)
             loss = loss_func(predictions, labels)
             metric = metric_func(predictions, labels)
 
+            # 梯度清零
+            optimizer.zero_grad()
             # 反向传播求梯度
             loss.backward()
             optimizer.step()
@@ -204,20 +206,26 @@ if __name__ == '__main__':
 
         # stop_index = len(testy)//32
         # start_index = 0
+        with torch.no_grad():
+            correct = 0
+            total = 0
         for features, labels in zip(testX, testy):
-            # start_index += 1
-            # if start_index > stop_index:
-            #     break
-            with torch.no_grad():
-                predictions = model(features.float())
-                # predictions = torch.argmax(predictions, dim=1)
-                labels = torch.argmax(labels, dim=1)
-                val_loss = loss_func(predictions, labels)
-                val_metric = metric_func(predictions, labels)
+                # start_index += 1
+                # if start_index > stop_index:
+                #     break
+            predictions = model(features.float())
+            # predictions = torch.argmax(predictions, dim=1)
+            _, pre = torch.max(predictions.data, 1)
+            labels = torch.argmax(labels, dim=1)
+            val_loss = loss_func(predictions, labels)
+            val_metric = metric_func(predictions, labels)
+            total += labels.size(0)
+            correct += (pre == labels).sum().item()
+        print('Accuracy: {}'.format(correct / total))
 
-            val_loss_sum += val_loss.item()
-            val_metric_sum += val_metric.item()
-            val_step = val_step + 1
+        val_loss_sum += val_loss.item()
+        val_metric_sum += val_metric.item()
+        val_step = val_step + 1
 
         # 3，记录日志-------------------------------------------------
         info = (epoch, loss_sum / step, metric_sum / step,
@@ -232,3 +240,6 @@ if __name__ == '__main__':
         print("\n" + "==========" * 8 + "%s" % nowtime)
 
     print('Finished Training...')
+    dummy_input = torch.randn(32, 9, 128, requires_grad=True)
+    torch.onnx.export(model, dummy_input, "cnn-pytorch.onnx")
+
