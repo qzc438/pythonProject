@@ -4,7 +4,7 @@ import onnxmltools as onnxmltools
 
 from pandas import read_csv
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Conv1D, Dropout, MaxPooling1D, Flatten, Dense
+from tensorflow.python.keras.layers import Conv1D, Dropout, MaxPooling1D, Flatten, Dense, LSTM
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.utils.np_utils import to_categorical
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score
@@ -70,15 +70,22 @@ def load_dataset(prefix=''):
 def evaluate_model(trainX, trainy, testX, testy):
     verbose, epochs, batch_size = 0, 10, 32
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
+    # model = Sequential()
+    # model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(n_timesteps, n_features)))
+    # model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+    # model.add(Dropout(0.5))
+    # model.add(MaxPooling1D(pool_size=2))
+    # model.add(Flatten())
+    # model.add(Dense(100, activation='relu'))
+    # model.add(Dense(n_outputs, activation='softmax'))
+    # model.summary()
+    n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
     model = Sequential()
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=(n_timesteps, n_features)))
-    model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+    model.add(LSTM(100, input_shape=(n_timesteps,n_features)))
     model.add(Dropout(0.5))
-    model.add(MaxPooling1D(pool_size=2))
-    model.add(Flatten())
     model.add(Dense(100, activation='relu'))
     model.add(Dense(n_outputs, activation='softmax'))
-    plot_model(model, show_shapes=True, to_file='CNN.png', dpi=200)
+    model.summary()
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     # fit network
     model.fit(trainX, trainy, epochs=epochs, batch_size=batch_size, verbose=verbose)
