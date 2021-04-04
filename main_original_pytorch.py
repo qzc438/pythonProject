@@ -251,8 +251,8 @@ def accuracy(y_pred, y_true):
 if __name__ == '__main__':
     # trainX, trainy, testX, testy = load_dataset()
     n_timesteps, n_features, n_outputs = trainX.shape[1], trainX.shape[2], trainy.shape[1]
-    model = CNN(n_timesteps, n_features, n_outputs)
-    # model = LSTM()
+    # model = CNN(n_timesteps, n_features, n_outputs)
+    model = LSTM()
 
     # in_dim = 1152
     # hidden_dim = 128
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         loss_sum = 0.0
         metric_sum = 0.0
         step = 1
-        # h = model.init_hidden()
+        h = model.init_hidden()
         train_losses = []
         train_accuracy = 0
 
@@ -356,11 +356,11 @@ if __name__ == '__main__':
             # 正向传播求损失
             # predictions = model(features[:32].float())
             # predictions = model(features.reshape(32, -1).float())
-            # h = tuple([each.data for each in h])
+            h = tuple([each.data for each in h])
             # 梯度清零
             optimizer.zero_grad()
-            predictions = model(features.float())
-            # predictions = model(features.float(), h)
+            # predictions = model(features.float())
+            predictions = model(features.float(), h)
             # print('predictions shape:', predictions.shape)
             # one_hot_pred = torch.zeros(size = (32, 6))
             # for i in predictions:
