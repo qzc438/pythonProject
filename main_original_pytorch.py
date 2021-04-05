@@ -289,7 +289,7 @@ if __name__ == '__main__':
     metric_func = accuracy
     metric_name = "accuracy"
 
-    epochs = 100
+    epochs = 10
     log_step_freq = 100
 
     dfhistory = pd.DataFrame(columns=["epoch", "loss", metric_name, "val_loss", "val_" + metric_name])
@@ -411,7 +411,7 @@ if __name__ == '__main__':
         train_accuracy_avg = train_accuracy / (step - 1)
         epoch_train_losses.append(train_loss_avg)
         epoch_train_acc.append(train_accuracy_avg)
-        print("Epoch: {}/{}...".format(epoch + 1, epochs),
+        print("Epoch: {}/{}...".format(epoch, epochs),
               ' ' * 16 + "Train Loss: {:.4f}".format(train_loss_avg),
               "Train accuracy: {:.4f}...".format(train_accuracy_avg))
 
@@ -458,5 +458,5 @@ if __name__ == '__main__':
         # print("\n" + "==========" * 8 + "%s" % nowtime)
 
     print('Finished Training...')
-    # dummy_input = torch.randn(32, 128, 9, requires_grad=True)
-    # torch.onnx.export(model, dummy_input, "cnn-pytorch.onnx")
+    dummy_input = torch.randn(32, 128, 9, requires_grad=True)
+    torch.onnx.export(model, dummy_input, "cnn-pytorch.onnx")

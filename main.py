@@ -3,9 +3,12 @@ import copy
 
 import torch
 import numpy as np
+from tensorflow.python.keras.utils.vis_utils import plot_model
 from tensorflow.python.keras.utils.np_utils import to_categorical
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 # py library
+from torchsummary import summary
+
 import util
 import data_file as df
 import data_load as dl
@@ -36,9 +39,9 @@ if __name__ == '__main__':
     type = model_name.split('_')[0]
     backend = model_name.split('_')[1]
     if model_name == 'CNN_Keras':
-        net = model.CNN_Keras()
+        net = model.CNN_Keras().getModel()
     elif model_name == 'LSTM_Keras':
-        net = model.LSTM_Keras()
+        net = model.LSTM_Keras().getModel()
     elif model_name == 'CNN_Pytorch':
         net = model.CNN_Pytorch()
     elif model_name == 'LSTM_Pytorch':
@@ -49,7 +52,7 @@ if __name__ == '__main__':
         net.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         y_train = to_categorical(y_train)
         net.fit(X_train, y_train, epochs=cfg.n_epochs, batch_size=cfg.batch_size)
-        net.summary()
+        net.save('./models/'+model_name+'.h5')
         # evaluation
         y_predict = net.predict(X_test, batch_size=cfg.batch_size)
         y_predict = np.argmax(y_predict, axis=1)
@@ -63,6 +66,10 @@ if __name__ == '__main__':
 
     # Pytorch Model
     if backend == 'Pytorch':
+        # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # net = net.to(device)
+        # summary(net, input_size=(128,9))
+
         loss_func = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(params=net.parameters(), lr=0.0015)
 
