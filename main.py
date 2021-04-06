@@ -1,13 +1,20 @@
 # input library
 import copy
 
+import tensorflow as tf
 import torch
+import netron
 import numpy as np
+import torch.onnx
+from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.utils.vis_utils import plot_model
 from tensorflow.python.keras.utils.np_utils import to_categorical
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 # py library
+from torch.autograd import Variable
 from torchsummary import summary
+import warnings
+warnings.filterwarnings('ignore')
 
 import util
 import data_file as df
@@ -53,6 +60,9 @@ if __name__ == '__main__':
         y_train = to_categorical(y_train)
         net.fit(X_train, y_train, epochs=cfg.n_epochs, batch_size=cfg.batch_size)
         net.save('./models/'+model_name+'.h5')
+        net = tf.python.keras.models.load_model('./models/'+model_name+'.h5')
+        netron.start('./models/'+model_name+'.h5')
+
         # evaluation
         y_predict = net.predict(X_test, batch_size=cfg.batch_size)
         y_predict = np.argmax(y_predict, axis=1)
@@ -68,7 +78,6 @@ if __name__ == '__main__':
     if backend == 'Pytorch':
         # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # net = net.to(device)
-        # summary(net, input_size=(128,9))
 
         loss_func = torch.nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(params=net.parameters(), lr=0.0015)
@@ -109,11 +118,14 @@ if __name__ == '__main__':
                 batch_ys = util.extract_batch_size(y_train, step, cfg.batch_size)
                 features, labels = torch.from_numpy(batch_xs), torch.from_numpy(batch_ys.flatten('F'))
                 optimizer.zero_grad()
-                if type == 'LSTM':
-                    h = tuple([each.data for each in h])
-                    predictions = net(features.float(), h)
-                else:
-                    predictions = net(features.float())
+                # if type == 'LSTM':
+                #     h = tuple([each.data for each in h])
+                #     predictions = net(features.float(), h)
+                # else:
+                #     predictions = net(features.float())
+                predictions = net(features.float())
+                # print('predictions', predictions.shape)
+                # print('labels', labels.shape)
                 loss = loss_func(predictions, labels.long())
                 train_losses.append(loss.item())
                 top_p, top_class = predictions.topk(1, dim=1)
@@ -136,11 +148,18 @@ if __name__ == '__main__':
                   "Train accuracy: {:.4f}...".format(train_accuracy_avg))
 
         print('Finished Training...')
+        torch.save(net, './models/'+model_name+'.pkl')
+        net = torch.load('./models/'+model_name+'.pkl')
+        x = Variable(torch.FloatTensor(32, 128, 9))
+        torch.onnx.export(net, x, './models/'+model_name+'.onnx')
+        netron.start('./models/'+model_name+'.onnx')
 
         print('Start Testing...')
         net.eval()
         test_losses = []
         test_accuracy = 0
+        test_precision = 0
+        test_recall = 0
         test_f1score = 0
         step = 1
         if type == 'LSTM':
@@ -152,11 +171,8 @@ if __name__ == '__main__':
             batch_ys = util.extract_batch_size(y_test, step, cfg.batch_size)
 
             features, labels = torch.from_numpy(batch_xs), torch.from_numpy(batch_ys.flatten('F'))
-            if type == 'LSTM':
-                test_h = tuple([each.data for each in test_h])
-                predictions = net(features.float(), test_h)
-            else:
-                predictions = net(features.float())
+
+            predictions = net(features.float())
             test_loss = loss_func(predictions, labels.long())
             test_losses.append(test_loss.item())
 
@@ -164,14 +180,19 @@ if __name__ == '__main__':
             equals = top_class == labels.view(*top_class.shape).long()
 
             test_accuracy += torch.mean(equals.type(torch.FloatTensor))
+            test_precision += precision_score(top_class.cpu(), labels.view(*top_class.shape).long().cpu(), average='macro')
+            test_recall += recall_score(top_class.cpu(), labels.view(*top_class.shape).long().cpu(), average='macro')
             test_f1score += f1_score(top_class.cpu(), labels.view(*top_class.shape).long().cpu(), average='macro')
             step += 1
 
         test_loss_avg = np.mean(test_losses)
         test_f1_avg = test_f1score / (step - 1)
+        test_precision_avg = test_precision / (step - 1)
+        test_recall_avg = test_recall / (step - 1)
         test_accuracy_avg = test_accuracy / (step - 1)
         if (test_accuracy_avg > best_accuracy):
             best_accuracy = test_accuracy_avg
             best_model = copy.deepcopy(net)
 
-        print([test_loss_avg, test_f1_avg, test_accuracy_avg, best_accuracy, best_model])
+        print([test_loss_avg, test_accuracy_avg, test_precision_avg, test_recall_avg, test_f1_avg, best_accuracy, best_model])
+        print('Finished Testing...')

@@ -25,4 +25,4 @@ Architecture = {
 }
 
 # Choose what architecure you want here:
-arch = Architecture['CNN_Pytorch']
+arch = Architecture['LSTM_Pytorch']

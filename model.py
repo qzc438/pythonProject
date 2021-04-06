@@ -14,7 +14,6 @@ n_layers = 2
 batch_size = 32
 
 
-# Saving the model to HDF5 format requires the model to be a Functional model or a Sequential model
 # Use Functional model because Sequential model is special Functional model
 class CNN_Keras():
 
@@ -32,6 +31,7 @@ class CNN_Keras():
         return model
 
 
+# Saving the model to HDF5 format requires the model to be a Functional model or a Sequential model
 # class CNN_Keras(keras.Model):
 #
 #     def __init__(self):
@@ -95,9 +95,8 @@ class LSTM_Keras():
 
     def getModel(self):
         inputs = keras.Input(shape=(n_timesteps, n_inputs))
-        x = keras.layers.LSTM(units=100)(inputs)
+        x = keras.layers.LSTM(units=32)(inputs)
         x = keras.layers.Dropout(rate=0.5)(x)
-        x = keras.layers.Dense(units=100, activation='relu')(x)
         outputs = keras.layers.Dense(n_classes, activation='softmax')(x)
         model = keras.Model(inputs=inputs, outputs=outputs, name='LSTM_Keras_Model')
         # model.summary()
@@ -108,33 +107,60 @@ class LSTM_Pytorch(torch.nn.Module):
     def __init__(self):
         super(LSTM_Pytorch, self).__init__()
 
-        self.lstm1 = torch.nn.LSTM(input_size=n_inputs, hidden_size=hidden_size, num_layers=n_layers, dropout=0.5)
-        self.lstm2 = torch.nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, num_layers=n_layers, dropout=0.5)
-        self.fc = torch.nn.Linear(32, 6)
-        self.dropout = torch.nn.Dropout(0.5)
+        self.lstm = torch.nn.LSTM(input_size=9, hidden_size=32)
+        # self.lstm = torch.nn.LSTM(input_size=32, hidden_size=32, num_layers=2, dropout=0.5)
+        self.drop = torch.nn.Dropout(p=0.5)
+        self.dnn = torch.nn.Sequential(
+            torch.nn.Linear(in_features=32, out_features=n_classes),
+            torch.nn.Softmax(dim=1)
+        )
 
-    def forward(self, x, hidden):
-        x = x.permute(1, 0, 2)
-        x, hidden1 = self.lstm1(x, hidden)
-        for i in range(0):
-            x, hidden2 = self.lstm2(x, hidden)
-        x = self.dropout(x)
-        out = x[-1]
-        out = out.contiguous().view(-1, 32)
-        out = self.fc(out)
-        out = torch.nn.functional.softmax(out, dim=1)
-        return out
+    def forward(self, input):
+        input = input.permute(1, 0, 2)
+        x, hidden = self.lstm(input, self.hidden)
+        x = self.drop(x)
+        x = x[-1]
+        x = x.contiguous().view(-1, 32)
+        output = self.dnn(x)
+        return output
 
     def init_hidden(self):
         weight = next(self.parameters()).data
-        hidden = (weight.new(n_layers, cfg.batch_size, hidden_size).zero_(),
-                  weight.new(n_layers, cfg.batch_size, hidden_size).zero_())
-        return hidden
+        self.hidden = (weight.new(1, 32, 32).zero_(), weight.new(1, 32, 32).zero_())
+
+
+# LSTM from https://github.com/sidharthgurbani/HAR-using-PyTorch
+# class LSTM_Pytorch(torch.nn.Module):
+#     def __init__(self):
+#         super(LSTM_Pytorch, self).__init__()
+#
+#         self.lstm1 = torch.nn.LSTM(input_size=n_inputs, hidden_size=hidden_size, num_layers=n_layers, dropout=0.5)
+#         self.lstm2 = torch.nn.LSTM(input_size=hidden_size, hidden_size=hidden_size, num_layers=n_layers, dropout=0.5)
+#         self.fc = torch.nn.Linear(32, 6)
+#         self.dropout = torch.nn.Dropout(0.5)
+#
+#     def forward(self, x, hidden):
+#         x = x.permute(1, 0, 2)
+#         x, hidden1 = self.lstm1(x, hidden)
+#         for i in range(0):
+#             x, hidden2 = self.lstm2(x, hidden)
+#         x = self.dropout(x)
+#         out = x[-1]
+#         out = out.contiguous().view(-1, 32)
+#         out = self.fc(out)
+#         out = torch.nn.functional.softmax(out, dim=1)
+#         return out
+#
+#     def init_hidden(self):
+#         weight = next(self.parameters()).data
+#         hidden = (weight.new(n_layers, cfg.batch_size, hidden_size).zero_(),
+#                   weight.new(n_layers, cfg.batch_size, hidden_size).zero_())
+#         return hidden
 
 if __name__ == '__main__':
     # Keras Model
-    CNN_Keras().getModel().summary()
+    LSTM_Keras().getModel().summary()
     # Pytorch Model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = CNN_Pytorch().to(device)
+    model = LSTM_Pytorch().to(device)
     summary(model, (128, 9))
