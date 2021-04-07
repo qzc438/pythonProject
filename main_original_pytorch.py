@@ -1,4 +1,4 @@
-# train from train data set (75%), test from test data set (25%)
+# https://github.com/sidharthgurbani/HAR-using-PyTorch
 import numpy as np
 import onnxmltools as onnxmltools
 import datetime

@@ -11,3 +11,8 @@ def extract_batch_size(data, step, batch_size):
         batch[i] = data[index]
 
     return batch
+
+
+def one_hot(y_, n_classes):
+    y_ = y_.reshape(len(y_))
+    return np.eye(n_classes)[np.array(y_, dtype=np.int32)]  # Returns FLOATS
