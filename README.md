@@ -18,9 +18,6 @@ Output: performance
 ### main_original_tensorflow.py: Original file using TensorFlow
 ### main-split.py: Manually separate train and test dataset
 ### model.py: Model architecture
-Current avaliable architecture:  
-CNN_Keras, LSTM_Keras  
-CNN_Pytorch, LSTM_Pytorch  
-CNN_TensorFlow, LSTM_TensorFlow
+Current architectures available: CNN_Keras, LSTM_Keras, CNN_Pytorch, LSTM_Pytorch, CNN_TensorFlow, LSTM_TensorFlow
 ### pytorch_minst.py: Minst dataset using Pytorch
 ### util.py: Utilities
