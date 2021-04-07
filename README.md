@@ -7,8 +7,8 @@ Current backends available: Keras, Pyotrch, TensorFlow
 ### data_load.py: Data load function
 ### data_review.py: Explore the dataset 
 ### flask_webservice.py: Web service, flask server
-input: dataset & model name  
-output: performance
+Input: dataset & model name  
+Output: performance
 ### main.py: Main function
 ### main_kfold.py: K-fold cross-validation with the dataset
 ### main_onnx.py: Translate saved model file to .onnx file
