@@ -1,9 +1,9 @@
 # pythonProject: 
 Provide deep learning model set and compiler for JaveEE project
 
-## File description:
+## config.py:
 
-* config.py: switch different deep learning models and backends   
+* switch different deep learning models and backends   
 Current deep learning models available: CNN, LSTM  
 Current backends available: Keras, Pyotrch, TensorFlow
 
