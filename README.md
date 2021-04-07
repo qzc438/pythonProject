@@ -16,7 +16,7 @@ Current backends available: Keras, Pyotrch, TensorFlow
 * Explore the dataset
 
 ## flask_webservice.py: 
-* Web service, flask server
+* Web service, flask server  
 Input: dataset & model name  
 Output: performance (accuracy, precision, recall, f1score)
 
