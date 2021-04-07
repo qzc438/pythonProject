@@ -6,46 +6,47 @@ Provide deep learning model set and compiler for JaveEE project
 Current deep learning models available: CNN, LSTM  
 Current backends available: Keras, Pyotrch, TensorFlow
 
-## data_file.py: 
+## * data_file.py: 
 ### Data file location
 
-## data_load.py: 
+## * data_load.py: 
 ### Data load function
 
-## data_review.py:
+## * data_review.py:
 ### Explore the dataset
 
-## flask_webservice.py: 
+## * flask_webservice.py: 
 ### Web service, flask server
 Input: dataset & model name  
 Output: performance (accuracy, precision, recall, f1score)
 
-## main.py: 
+## * main.py: 
 ### Main function
 
-## main_kfold.py: 
+## * main_kfold.py: 
 ### K-fold cross-validation with the dataset
 
-## main_onnx.py: 
+## * main_onnx.py: 
 ### Translate saved model file to .onnx file
 
-## main_original_keras.py: 
+## * main_original_keras.py: 
 ### Original file using Keras
 
-## main_original_pytorch.py: 
+## * main_original_pytorch.py: 
 ### Original file using Pytorch
 
-## main_original_tensorflow.py: 
+## * main_original_tensorflow.py: 
 ### Original file using TensorFlow
 
-## main-split.py: 
+## * main-split.py: 
 ### Manually separate train and test dataset
 
-## model.py: 
+## * model.py: 
 ### Model architecture
 Current architectures available: CNN_Keras, LSTM_Keras, CNN_Pytorch, LSTM_Pytorch, CNN_TensorFlow, LSTM_TensorFlow
 
-## pytorch_minst.py: 
+## * pytorch_minst.py: 
 ### Minst dataset using Pytorch
 
-## util.py: Utilities
+## * util.py: 
+### Utilities
