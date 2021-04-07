@@ -43,7 +43,8 @@ Output: performance (accuracy, precision, recall, f1score)
 
 ## model.py: 
 * Model architecture  
-Current architectures available: CNN_Keras, LSTM_Keras, CNN_Pytorch, LSTM_Pytorch, CNN_TensorFlow, LSTM_TensorFlow
+Current architectures available:  
+CNN_Keras, LSTM_Keras, CNN_Pytorch, LSTM_Pytorch, CNN_TensorFlow, LSTM_TensorFlow
 
 ## pytorch_minst.py: 
 * Minst dataset using Pytorch
