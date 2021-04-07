@@ -16,7 +16,7 @@ Current backends available: Keras, Pyotrch, TensorFlow
 * Explore the dataset
 
 ## flask_webservice.py: 
-* Web service, flask server
+* Web service, flask server  
 Input: dataset & model name  
 Output: performance (accuracy, precision, recall, f1score)
 
@@ -42,8 +42,9 @@ Output: performance (accuracy, precision, recall, f1score)
 * Manually separate train and test dataset
 
 ## model.py: 
-* Model architecture
-Current architectures available: CNN_Keras, LSTM_Keras, CNN_Pytorch, LSTM_Pytorch, CNN_TensorFlow, LSTM_TensorFlow
+* Model architecture  
+Current architectures available:  
+CNN_Keras, LSTM_Keras, CNN_Pytorch, LSTM_Pytorch, CNN_TensorFlow, LSTM_TensorFlow
 
 ## pytorch_minst.py: 
 * Minst dataset using Pytorch
