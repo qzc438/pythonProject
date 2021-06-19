@@ -1,5 +1,5 @@
 batch_size = 32
-n_epochs = 50
+n_epochs = 10
 
 CNN_Keras = {
     'name': 'CNN_Keras',
@@ -35,4 +35,4 @@ Architecture = {
 }
 
 # Choose what architecure you want here:
-arch = Architecture['LSTM_TensorFlow']
+arch = Architecture['CNN_Keras']

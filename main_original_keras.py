@@ -1,7 +1,7 @@
 # train from train data set (75%), test from test data set (25%)
 import numpy as np
-import onnxmltools as onnxmltools
-
+# import onnxmltools as onnxmltools
+import tensorflow as tf
 from pandas import read_csv
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.layers import Conv1D, Dropout, MaxPooling1D, Flatten, Dense, LSTM
@@ -85,7 +85,7 @@ def evaluate_model(trainX, trainy, testX, testy):
     model.add(Dropout(0.5))
     model.add(Dense(100, activation='relu'))
     model.add(Dense(n_outputs, activation='softmax'))
-    model.summary()
+    # model.summary()
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     # fit network
     model.fit(trainX, trainy, epochs=epochs, batch_size=batch_size, verbose=verbose)
@@ -95,13 +95,24 @@ def evaluate_model(trainX, trainy, testX, testy):
     # save model
     model.save('./models/model_test.h5')
     keras_model = load_model('./models/model_test.h5')
-    onnx_model = onnxmltools.convert_keras(keras_model)
-    onnxmltools.utils.save_model(onnx_model, './models/model_test.onnx')
+    # onnx_model = onnxmltools.convert_keras(keras_model)
+    # onnxmltools.utils.save_model(onnx_model, './models/model_test.onnx')
+    tf.keras.utils.plot_model(
+        model,
+        to_file="CNN.png",
+        show_shapes=False,
+        show_dtype=False,
+        show_layer_names=True,
+        rankdir="TB",
+        expand_nested=False,
+        dpi=96,
+    )
+
     # load model
     model = load_model('./models/model_test.h5')
 
     y_predict = model.predict(testX, batch_size=batch_size, verbose=verbose)
-    print('y_predict:', y_predict)
+    # print('y_predict:', y_predict)
     y_predict = np.argmax(y_predict, axis=1)
     testy = np.argmax(testy, axis=1)
     y_true = np.reshape(testy, [-1])
@@ -126,7 +137,7 @@ def summarize_results(scores):
 def run_experiment(repeats=10):
     # load data
     trainX, trainy, testX, testy = load_dataset()
-    print('trainX', trainX)
+    # print('trainX', trainX)
     # repeat experiment
     accuracylist = list()
     precisionlist = list()

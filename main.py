@@ -3,8 +3,11 @@ import numpy as np
 import copy
 import warnings
 warnings.filterwarnings('ignore')
-import tensorflow.compat.v1 as tf
-tf.compat.v1.disable_eager_execution()
+import tensorflow as tf
+
+from tensorflow import lite
+# import tensorflow.compat.v1 as tf1
+# tf.compat.v1.disable_eager_execution()
 import netron
 import torch.onnx
 from tensorflow.python.keras.utils.np_utils import to_categorical
@@ -56,12 +59,20 @@ if __name__ == '__main__':
 
     # Keras Model
     if backend == 'Keras':
+        print(X_train.shape)
         net.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         y_train = to_categorical(y_train)
         net.fit(X_train, y_train, epochs=cfg.n_epochs, batch_size=cfg.batch_size)
         tf.keras.models.save_model(net, './models/' + model_name + '.h5')
-        net = tf.python.keras.models.load_model('./models/' + model_name + '.h5')
-        netron.start('./models/' + model_name + '.h5')
+        net = tf.keras.models.load_model('./models/' + model_name + '.h5')
+        # netron.start('./models/' + model_name + '.h5')
+
+        # Convert the model
+        converter = tf.lite.TFLiteConverter.from_keras_model(net)
+        tflite_model = converter.convert()
+        # Save the model
+        with open('./models/' + model_name +'.tflite', 'wb') as f:
+            f.write(tflite_model)
 
         # evaluation
         y_predict = net.predict(X_test, batch_size=cfg.batch_size)
@@ -205,22 +216,40 @@ if __name__ == '__main__':
         lambda_loss_amount = 0.0015
 
         # Graph input/output
-        x = tf.placeholder(tf.float32, [None, n_steps, n_input])
-        y = tf.placeholder(tf.float32, [None, n_classes])
+        x = tf1.placeholder(tf.float32, [None, n_steps, n_input], name="myInput")
+        y = tf1.placeholder(tf.float32, [None, n_classes])
         pred = net.getGraph(x)
         # Loss, optimizer and evaluation
         l2 = lambda_loss_amount * sum(
-            tf.nn.l2_loss(tf_var) for tf_var in tf.trainable_variables()
+            tf1.nn.l2_loss(tf_var) for tf_var in tf1.trainable_variables()
         )  # L2 loss prevents this overkill neural network to overfit the data
-        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + l2  # Softmax loss
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)  # Adam Optimizer
-        correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
+        cost = tf1.reduce_mean(tf1.nn.softmax_cross_entropy_with_logits(labels=y, logits=pred)) + l2  # Softmax loss
+        optimizer = tf1.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)  # Adam Optimizer
+        correct_pred = tf1.equal(tf1.argmax(pred, 1), tf1.argmax(y, 1))
+        accuracy = tf1.reduce_mean(tf1.cast(correct_pred, tf1.float32))
 
         # Launch the graph
-        sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
-        init = tf.global_variables_initializer()
+        # root = tf.train.Checkpoint()
+
+        sess = tf1.InteractiveSession(config=tf1.ConfigProto(log_device_placement=True))
+        init = tf1.global_variables_initializer()
         sess.run(init)
+
+        # file_name = './models/' + model_name + ".ckpt"
+        # saver.save(sess, file_name)
+        # net.save('./models', save_format='tf')
+        # tf1.saved_model.simple_save(sess,
+        #                           "./model",
+        #                           inputs={"myInput": x},
+        #                           outputs={"myOutput": y})
+        #
+        # tf.saved_model.save(root, "./model")
+
+        # Convert the model
+        # converter = tf1.lite.TFLiteConverter.from_saved_model("./model")  # path to the SavedModel directory
+        # tflite_model = converter.convert()
+        # with open('./models/' + model_name +'.tflite', 'wb') as f:
+        #     f.write(tflite_model)
 
         epochs = cfg.n_epochs
         for epoch in range(1, epochs + 1):
