@@ -1,7 +1,7 @@
 ## config.py:
 * Switch different deep learning models and backends   
-Current deep learning models available: CNN, LSTM  
-Current backends available: Keras, Pyotrch, TensorFlow
+(1) Current deep learning models available: CNN, LSTM  
+(2) Current backends available: Keras, Pyotrch, TensorFlow
 
 ## data_file.py: 
 * Data file location
