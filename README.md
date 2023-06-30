@@ -1,5 +1,5 @@
 # pythonProject: 
-Provide deep learning model set and compiler for JaveEE project
+Provide deep learning model set and compiler for JaveEE project: https://github.com/qzc438/MobileDLSearch  
 
 ## config.py:
 * Switch different deep learning models and backends   
